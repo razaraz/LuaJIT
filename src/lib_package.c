@@ -527,7 +527,7 @@ static int lj_cf_package_seeall(lua_State *L)
 static void setpath(lua_State *L, const char *fieldname, const char *envname,
 		    const char *def, int noenv)
 {
-#if LJ_TARGET_CONSOLE
+#if LJ_TARGET_CONSOLE || _XBOX_ONE
   const char *path = NULL;
   UNUSED(envname);
 #else

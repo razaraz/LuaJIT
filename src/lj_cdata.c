@@ -127,16 +127,16 @@ collect_attrib:
   integer_key:
     if (ctype_ispointer(ct->info)) {
       CTSize sz = lj_ctype_size(cts, ctype_cid(ct->info));  /* Element size. */
-      if (sz == CTSIZE_INVALID)
-	lj_err_caller(cts->L, LJ_ERR_FFI_INVSIZE);
-      if (ctype_isptr(ct->info)) {
-	p = (uint8_t *)cdata_getptr(p, ct->size);
-      } else if ((ct->info & (CTF_VECTOR|CTF_COMPLEX))) {
-	if ((ct->info & CTF_COMPLEX)) idx &= 1;
-	*qual |= CTF_CONST;  /* Valarray elements are constant. */
+      if (sz != CTSIZE_INVALID) {
+	if (ctype_isptr(ct->info)) {
+	  p = (uint8_t *)cdata_getptr(p, ct->size);
+	} else if ((ct->info & (CTF_VECTOR|CTF_COMPLEX))) {
+	  if ((ct->info & CTF_COMPLEX)) idx &= 1;
+	  *qual |= CTF_CONST;  /* Valarray elements are constant. */
+	}
+	*pp = p + idx*(int32_t)sz;
+	return ct;
       }
-      *pp = p + idx*(int32_t)sz;
-      return ct;
     }
   } else if (tviscdata(key)) {  /* Integer cdata key. */
     GCcdata *cdk = cdataV(key);
@@ -144,7 +144,11 @@ collect_attrib:
     if (ctype_isenum(ctk->info)) ctk = ctype_child(cts, ctk);
     if (ctype_isinteger(ctk->info)) {
       lj_cconv_ct_ct(cts, ctype_get(cts, CTID_INT_PSZ), ctk,
+#ifdef _XBOX_ONE
+             (uint8_t *)&idx, (uint8_t *)cdataptr(cdk), 0);
+#else
 		     (uint8_t *)&idx, cdataptr(cdk), 0);
+#endif
       goto integer_key;
     }
   } else if (tvisstr(key)) {  /* String key. */

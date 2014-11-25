@@ -79,7 +79,11 @@ static int carith_checkarg(lua_State *L, CTState *cts, CDArith *ca)
       }
     } else {
       ca->ct[i] = NULL;
+	 #ifdef _XBOX_ONE
+	  ca->p[i] = (uint8_t *)(intptr_t)1;  /* To make it unequal. */
+	 #else
       ca->p[i] = (void *)(intptr_t)1;  /* To make it unequal. */
+	 #endif
       ok = 0;
     }
   }

@@ -237,7 +237,11 @@ static void callback_mcode_new(CTState *cts)
   p = lj_mem_new(cts->L, sz);
 #endif
   cts->cb.mcode = p;
+#ifdef _XBOX_ONE
+  callback_mcode_init(cts->g, (uint8_t *)p);
+#else
   callback_mcode_init(cts->g, p);
+#endif
   lj_mcode_sync(p, (char *)p + sz);
 #if LJ_TARGET_WINDOWS
   {
@@ -476,7 +480,11 @@ static void callback_conv_args(CTState *cts, lua_State *L)
     done:
       if (LJ_BE && cta->size < CTSIZE_PTR)
 	sp = (void *)((uint8_t *)sp + CTSIZE_PTR-cta->size);
+#ifdef _XBOX_ONE
+      gcsteps += lj_cconv_tv_ct(cts, cta, 0, o++, (uint8_t *)sp);
+#else
       gcsteps += lj_cconv_tv_ct(cts, cta, 0, o++, sp);
+#endif
     }
     fid = ctf->sib;
   }

@@ -148,6 +148,14 @@ IRDEF(IRENUM)
   IR__MAX
 } IROp;
 
+#ifdef _XBOX_ONE
+/* Definition required for Xbox One since it compiles as C++ */
+IROp operator+=(IROp left, int right)
+{
+    return (IROp)((int)left + right);
+}
+#endif
+
 /* Stored opcode. */
 typedef uint8_t IROp1;
 
@@ -312,6 +320,14 @@ IRTDEF(IRTENUM)
   IRT_TYPE = 0x1f,
   IRT_T = 0xff
 } IRType;
+
+#ifdef _XBOX_ONE
+/* Requires definition for Xbox One since it compiles as C++ */
+IRType operator-=(IRType left, int right)
+{
+    return (IRType)((int)left - right);
+}
+#endif
 
 #define irtype_ispri(irt)	((uint32_t)(irt) <= IRT_TRUE)
 

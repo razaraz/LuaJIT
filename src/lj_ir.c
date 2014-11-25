@@ -59,7 +59,87 @@ LJ_DATADEF const CCallInfo lj_ir_callinfo[] = {
 #define IRCALLCI(cond, name, nargs, kind, type, flags) \
   { (ASMFunction)IRCALLCOND_##cond(name), \
     (nargs)|(CCI_CALL_##kind)|(IRT_##type<<CCI_OTSHIFT)|(flags) },
+
+#ifdef _XBOX_ONE
+
+// The macro below doesn't work with C++ compilers since there's ambiguity with the sinh, cosh, and tanh definitions
+
+{ (ASMFunction)lj_str_cmp, (2)|(((IR_CALLN << 24)|0x2000))|(IRT_INT<<16)|(0x0400) }, 
+{ (ASMFunction)lj_str_new, (3)|((IR_CALLS << 24))|(IRT_STR<<16)|(0x0100) }, 
+{ (ASMFunction)lj_strscan_num, (2)|(((IR_CALLN << 24)|0x2000))|(IRT_INT<<16)|(0) }, 
+{ (ASMFunction)lj_str_fromint, (2)|(((IR_CALLN << 24)|0x2000))|(IRT_STR<<16)|(0x0100) }, 
+{ (ASMFunction)lj_str_fromnum, (2)|(((IR_CALLN << 24)|0x2000))|(IRT_STR<<16)|(0x0100) }, 
+{ (ASMFunction)lj_tab_new1, (2)|(((IR_CALLS << 24)|0x2000))|(IRT_TAB<<16)|(0x0100) }, 
+{ (ASMFunction)lj_tab_dup, (2)|(((IR_CALLS << 24)|0x2000))|(IRT_TAB<<16)|(0x0100) }, 
+{ (ASMFunction)lj_tab_newkey, (3)|((IR_CALLS << 24))|(IRT_P32<<16)|(0x0100) }, 
+{ (ASMFunction)lj_tab_len, (1)|(((IR_CALLL << 24)|0x2000))|(IRT_INT<<16)|(0) }, 
+{ (ASMFunction)lj_gc_step_jit, (2)|(((IR_CALLS << 24)|0x2000))|(IRT_NIL<<16)|(0x0100) }, 
+{ (ASMFunction)lj_gc_barrieruv, (2)|(((IR_CALLS << 24)|0x2000))|(IRT_NIL<<16)|(0) }, 
+{ (ASMFunction)lj_mem_newgco, (2)|(((IR_CALLS << 24)|0x2000))|(IRT_P32<<16)|(0x0100) }, 
+{ (ASMFunction)lj_math_random_step, (1)|(((IR_CALLS << 24)|0x2000))|(IRT_NUM<<16)|(0x0200|0x0400) }, 
+{ (ASMFunction)lj_vm_modi, (2)|(((IR_CALLN << 24)|0x2000))|(IRT_INT<<16)|(0) }, 
+{ (ASMFunction)(float(*)(float))sinh, (1)|((IR_CALLN << 24))|(IRT_NUM<<16)|(0) }, 
+{ (ASMFunction)(float(*)(float))cosh, (1)|((IR_CALLN << 24))|(IRT_NUM<<16)|(0) }, 
+{ (ASMFunction)(float(*)(float))tanh, (1)|((IR_CALLN << 24))|(IRT_NUM<<16)|(0) }, 
+{ (ASMFunction)fputc, (2)|((IR_CALLS << 24))|(IRT_INT<<16)|(0) }, 
+{ (ASMFunction)fwrite, (4)|((IR_CALLS << 24))|(IRT_INT<<16)|(0) }, 
+{ (ASMFunction)fflush, (1)|((IR_CALLS << 24))|(IRT_INT<<16)|(0) }, 
+{ (ASMFunction)0, (1)|((IR_CALLN << 24))|(IRT_NUM<<16)|(0) }, 
+{ (ASMFunction)0, (1)|((IR_CALLN << 24))|(IRT_NUM<<16)|(0) }, 
+{ (ASMFunction)0, (1)|((IR_CALLN << 24))|(IRT_NUM<<16)|(0) }, 
+{ (ASMFunction)0, (1)|((IR_CALLN << 24))|(IRT_NUM<<16)|(0) }, 
+{ (ASMFunction)0, (1)|((IR_CALLN << 24))|(IRT_NUM<<16)|(0) }, 
+{ (ASMFunction)0, (1)|((IR_CALLN << 24))|(IRT_NUM<<16)|(0) }, 
+{ (ASMFunction)0, (1)|((IR_CALLN << 24))|(IRT_NUM<<16)|(0) }, 
+{ (ASMFunction)0, (1)|((IR_CALLN << 24))|(IRT_NUM<<16)|(0) }, 
+{ (ASMFunction)0, (1)|((IR_CALLN << 24))|(IRT_NUM<<16)|(0) }, 
+{ (ASMFunction)0, (1)|((IR_CALLN << 24))|(IRT_NUM<<16)|(0) }, 
+{ (ASMFunction)0, (1)|((IR_CALLN << 24))|(IRT_NUM<<16)|(0) }, 
+{ (ASMFunction)0, (1)|((IR_CALLN << 24))|(IRT_NUM<<16)|(0) }, 
+{ (ASMFunction)0, (1+1)|((IR_CALLN << 24))|(IRT_NUM<<16)|(0) }, 
+{ (ASMFunction)0, (1*2)|((IR_CALLN << 24))|(IRT_NUM<<16)|(0) }, 
+{ (ASMFunction)0, (1*2)|((IR_CALLN << 24))|(IRT_NUM<<16)|(0) }, 
+{ (ASMFunction)0, (1+1)|((IR_CALLN << 24))|(IRT_NUM<<16)|(0) }, 
+{ (ASMFunction)0, (2)|((IR_CALLN << 24))|(IRT_INT<<16)|(0) }, 
+{ (ASMFunction)0, (4)|((IR_CALLN << 24))|(IRT_NUM<<16)|(0) }, 
+{ (ASMFunction)0, (4)|((IR_CALLN << 24))|(IRT_NUM<<16)|(0) }, 
+{ (ASMFunction)0, (4)|((IR_CALLN << 24))|(IRT_NUM<<16)|(0) }, 
+{ (ASMFunction)0, (4)|((IR_CALLN << 24))|(IRT_NUM<<16)|(0) }, 
+{ (ASMFunction)0, (4)|((IR_CALLN << 24))|(IRT_NIL<<16)|(0) }, 
+{ (ASMFunction)0, (1)|((IR_CALLN << 24))|(IRT_NUM<<16)|(0) }, 
+{ (ASMFunction)0, (2)|((IR_CALLN << 24))|(IRT_INT<<16)|(0) }, 
+{ (ASMFunction)0, (1)|((IR_CALLN << 24))|(IRT_NUM<<16)|(0) }, 
+{ (ASMFunction)0, (1)|((IR_CALLN << 24))|(IRT_NUM<<16)|(0) }, 
+{ (ASMFunction)0, (2)|((IR_CALLN << 24))|(IRT_INT<<16)|(0) }, 
+{ (ASMFunction)0, (2)|((IR_CALLN << 24))|(IRT_FLOAT<<16)|(0) }, 
+{ (ASMFunction)0, (1)|((IR_CALLN << 24))|(IRT_FLOAT<<16)|(0) }, 
+{ (ASMFunction)0, (1)|((IR_CALLN << 24))|(IRT_FLOAT<<16)|(0) }, 
+{ (ASMFunction)0, (1)|((IR_CALLN << 24))|(IRT_INT<<16)|(0) }, 
+{ (ASMFunction)0, (1)|((IR_CALLN << 24))|(IRT_INT<<16)|(0) }, 
+{ (ASMFunction)0, (2)|((IR_CALLN << 24))|(IRT_NUM<<16)|(0) }, 
+{ (ASMFunction)0, (2)|((IR_CALLN << 24))|(IRT_NUM<<16)|(0) }, 
+{ (ASMFunction)0, (2)|((IR_CALLN << 24))|(IRT_FLOAT<<16)|(0) }, 
+{ (ASMFunction)0, (2)|((IR_CALLN << 24))|(IRT_FLOAT<<16)|(0) }, 
+{ (ASMFunction)0, (1)|((IR_CALLN << 24))|(IRT_I64<<16)|(0) }, 
+{ (ASMFunction)0, (1)|((IR_CALLN << 24))|(IRT_U64<<16)|(0) }, 
+{ (ASMFunction)0, (1)|((IR_CALLN << 24))|(IRT_I64<<16)|(0) }, 
+{ (ASMFunction)0, (1)|((IR_CALLN << 24))|(IRT_U64<<16)|(0) }, 
+{ (ASMFunction)lj_carith_divi64, (2)|((IR_CALLN << 24))|(IRT_I64<<16)|(0x0400) }, 
+{ (ASMFunction)lj_carith_divu64, (2)|((IR_CALLN << 24))|(IRT_U64<<16)|(0x0400) }, 
+{ (ASMFunction)lj_carith_modi64, (2)|((IR_CALLN << 24))|(IRT_I64<<16)|(0x0400) }, 
+{ (ASMFunction)lj_carith_modu64, (2)|((IR_CALLN << 24))|(IRT_U64<<16)|(0x0400) }, 
+{ (ASMFunction)lj_carith_powi64, (2)|((IR_CALLN << 24))|(IRT_I64<<16)|(0x0400) }, 
+{ (ASMFunction)lj_carith_powu64, (2)|((IR_CALLN << 24))|(IRT_U64<<16)|(0x0400) }, 
+{ (ASMFunction)lj_cdata_setfin, (2)|(((IR_CALLN << 24)|0x2000))|(IRT_P32<<16)|(0x0100) }, 
+{ (ASMFunction)strlen, (1)|((IR_CALLL << 24))|(IRT_INTP<<16)|(0) }, 
+{ (ASMFunction)memcpy, (3)|((IR_CALLS << 24))|(IRT_PTR<<16)|(0) }, 
+{ (ASMFunction)memset, (3)|((IR_CALLS << 24))|(IRT_PTR<<16)|(0) }, 
+{ (ASMFunction)lj_vm_errno, (0)|((IR_CALLS << 24))|(IRT_INT<<16)|(0x0400) }, 
+{ (ASMFunction)0, (2)|((IR_CALLN << 24))|(IRT_I64<<16)|(0x0400) },
+
+#else
 IRCALLDEF(IRCALLCI)
+#endif
 #undef IRCALLCI
   { NULL, 0 }
 };
@@ -114,7 +194,11 @@ TRef LJ_FASTCALL lj_ir_emit(jit_State *J)
 {
   IRRef ref = lj_ir_nextins(J);
   IRIns *ir = IR(ref);
+#ifdef _XBOX_ONE
+  IROp op = (IROp)fins->o;
+#else
   IROp op = fins->o;
+#endif
   ir->prev = J->chain[op];
   J->chain[op] = (IRRef1)ref;
   ir->o = op;

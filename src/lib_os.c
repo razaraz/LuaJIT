@@ -36,8 +36,8 @@
 
 LJLIB_CF(os_execute)
 {
-#if LJ_TARGET_CONSOLE
-#if LJ_52
+#if LJ_TARGET_CONSOLE || _XBOX_ONE
+#if LJ_52 || _XBOX_ONE
   errno = ENOSYS;
   return luaL_fileresult(L, 0, NULL);
 #else
@@ -98,7 +98,7 @@ LJLIB_CF(os_tmpname)
 
 LJLIB_CF(os_getenv)
 {
-#if LJ_TARGET_CONSOLE
+#if LJ_TARGET_CONSOLE || _XBOX_ONE
   lua_pushnil(L);
 #else
   lua_pushstring(L, getenv(luaL_checkstring(L, 1)));  /* if NULL push nil */

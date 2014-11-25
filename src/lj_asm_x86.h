@@ -325,14 +325,6 @@ static Reg asm_fuseload(ASMState *as, IRRef ref, RegSet allow)
       as->mrm.base = as->mrm.idx = RID_NONE;
       return RID_MRM;
     }
-  } else if (ir->o == IR_KINT64) {
-    RegSet avail = as->freeset & ~as->modset & RSET_GPR;
-    lua_assert(allow != RSET_EMPTY);
-    if (!(avail & (avail-1))) {  /* Fuse if less than two regs available. */
-      as->mrm.ofs = ptr2addr(ir_kint64(ir));
-      as->mrm.base = as->mrm.idx = RID_NONE;
-      return RID_MRM;
-    }
   } else if (mayfuse(as, ref)) {
     RegSet xallow = (allow & RSET_GPR) ? allow : RSET_GPR;
     if (ir->o == IR_SLOAD) {
@@ -351,7 +343,11 @@ static Reg asm_fuseload(ASMState *as, IRRef ref, RegSet allow)
 	return RID_MRM;
       }
     } else if (ir->o == IR_ALOAD || ir->o == IR_HLOAD || ir->o == IR_ULOAD) {
+#ifdef _XBOX_ONE
+      if (noconflict(as, ref, (IROp)(ir->o + IRDELTA_L2S), 0)) {
+#else
       if (noconflict(as, ref, ir->o + IRDELTA_L2S, 0)) {
+#endif
 	asm_fuseahuref(as, ir->op1, xallow);
 	return RID_MRM;
       }
@@ -369,7 +365,7 @@ static Reg asm_fuseload(ASMState *as, IRRef ref, RegSet allow)
       return RID_MRM;
     }
   }
-  if (!(as->freeset & allow) && !irref_isk(ref) &&
+  if (!(as->freeset & allow) &&
       (allow == RSET_EMPTY || ra_hasspill(ir->s) || iscrossref(as, ref)))
     goto fusespill;
   return ra_allocref(as, ref, allow);
@@ -1969,7 +1965,11 @@ static void asm_min_max(ASMState *as, IRIns *ir, int cc)
   IRRef lref = ir->op1, rref = ir->op2;
   if (irref_isk(rref)) { lref = rref; rref = ir->op1; }
   right = ra_alloc1(as, rref, rset_exclude(RSET_GPR, dest));
+#ifdef _XBOX_ONE
+  emit_rr(as, (x86Op)(XO_CMOV + (cc<<24)), REX_64IR(ir, dest), right);
+#else
   emit_rr(as, XO_CMOV + (cc<<24), REX_64IR(ir, dest), right);
+#endif
   emit_rr(as, XO_CMP, REX_64IR(ir, dest), right);
   ra_left(as, dest, lref);
 }
@@ -1977,7 +1977,11 @@ static void asm_min_max(ASMState *as, IRIns *ir, int cc)
 static void asm_bitswap(ASMState *as, IRIns *ir)
 {
   Reg dest = ra_dest(as, ir, RSET_GPR);
+#ifdef _XBOX_ONE
+  as->mcp = emit_op((x86Op)(XO_BSWAP + ((dest&7) << 24)),
+#else
   as->mcp = emit_op(XO_BSWAP + ((dest&7) << 24),
+#endif
 		    REX_64IR(ir, 0), dest, 0, as->mcp, 1);
   ra_left(as, dest, ir->op1);
 }

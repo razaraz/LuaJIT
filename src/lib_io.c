@@ -97,7 +97,7 @@ static int io_file_close(lua_State *L, IOFileUD *iof)
     int stat = -1;
 #if LJ_TARGET_POSIX
     stat = pclose(iof->fp);
-#elif LJ_TARGET_WINDOWS
+#elif LJ_TARGET_WINDOWS && !_XBOX_ONE
     stat = _pclose(iof->fp);
 #else
     lua_assert(0);
@@ -256,7 +256,11 @@ static int io_file_write(lua_State *L, FILE *fp, int start)
 static int io_file_iter(lua_State *L)
 {
   GCfunc *fn = curr_func(L);
+#ifdef _XBOX_ONE
+  IOFileUD *iof = (IOFileUD *)uddata(udataV(&fn->c.upvalue[0]));
+#else
   IOFileUD *iof = uddata(udataV(&fn->c.upvalue[0]));
+#endif
   int n = fn->c.nupvalues - 1;
   if (iof->fp == NULL)
     lj_err_caller(L, LJ_ERR_IOCLFL);
@@ -405,6 +409,7 @@ LJLIB_CF(io_open)
 
 LJLIB_CF(io_popen)
 {
+#ifndef _XBOX_ONE
 #if LJ_TARGET_POSIX || LJ_TARGET_WINDOWS
   const char *fname = strdata(lj_lib_checkstr(L, 1));
   GCstr *s = lj_lib_optstr(L, 2);
@@ -420,6 +425,9 @@ LJLIB_CF(io_popen)
   return iof->fp != NULL ? 1 : luaL_fileresult(L, 0, fname);
 #else
   return luaL_error(L, LUA_QL("popen") " not supported");
+#endif
+#else
+    return luaL_error(L, LUA_QL("popen") " not supported");
 #endif
 }
 

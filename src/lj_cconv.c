@@ -547,12 +547,20 @@ void lj_cconv_ct_tv(CTState *cts, CType *d,
     sid = CTID_DOUBLE;
     flags |= CCF_FROMTV;
   } else if (tviscdata(o)) {
+#ifdef _XBOX_ONE
+    sp = (uint8_t *)cdataptr(cdataV(o));
+#else
     sp = cdataptr(cdataV(o));
+#endif
     sid = cdataV(o)->ctypeid;
     s = ctype_get(cts, sid);
     if (ctype_isref(s->info)) {  /* Resolve reference for value. */
       lua_assert(s->size == CTSIZE_PTR);
+#ifdef _XBOX_ONE
+      sp = *(uint8_t **)sp;
+#else
       sp = *(void **)sp;
+#endif
       sid = ctype_cid(s->info);
     }
     s = ctype_raw(cts, sid);

@@ -22,6 +22,14 @@ typedef enum {
   STRSCAN_INT, STRSCAN_U32, STRSCAN_I64, STRSCAN_U64,
 } StrScanFmt;
 
+#ifdef _XBOX_ONE
+/* Defined for Xbox One since it compiles as C++ */
+StrScanFmt operator+=(StrScanFmt left, int right)
+{
+    return (StrScanFmt)((int)left + right);
+}
+#endif
+
 LJ_FUNC StrScanFmt lj_strscan_scan(const uint8_t *p, TValue *o, uint32_t opt);
 LJ_FUNC int LJ_FASTCALL lj_strscan_num(GCstr *str, TValue *o);
 #if LJ_DUALNUM

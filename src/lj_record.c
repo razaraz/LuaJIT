@@ -301,7 +301,11 @@ static TRef fori_load(jit_State *J, BCReg slot, IRType t, int mode)
 {
   int conv = (tvisint(&J->L->base[slot]) != (t==IRT_INT)) ? IRSLOAD_CONVERT : 0;
   return sloadt(J, (int32_t)slot,
+#ifdef _XBOX_ONE
+        (IRType)(t + (((mode & IRSLOAD_TYPECHECK)) ||
+#else
 		t + (((mode & IRSLOAD_TYPECHECK) ||
+#endif
 		      (conv && t == IRT_INT && !(mode >> 16))) ?
 		     IRT_GUARD : 0),
 		mode + conv);
@@ -438,14 +442,22 @@ static LoopEvent rec_for(jit_State *J, const BCIns *fori, int isforl)
   if (isforl) {  /* Handle FORL/JFORL opcodes. */
     TRef idx = tr[FORL_IDX];
     if (mref(J->scev.pc, const BCIns) == fori && tref_ref(idx) == J->scev.idx) {
+#ifdef _XBOX_ONE
+      t = (IRType)(J->scev.t.irt);
+#else
       t = J->scev.t.irt;
+#endif
       stop = J->scev.stop;
       idx = emitir(IRT(IR_ADD, t), idx, J->scev.step);
       tr[FORL_EXT] = tr[FORL_IDX] = idx;
     } else {
       ScEvEntry scev;
       rec_for_loop(J, fori, &scev, 0);
+#ifdef _XBOX_ONE
+      t = (IRType)(scev.t.irt);
+#else
       t = scev.t.irt;
+#endif
       stop = scev.stop;
     }
   } else {  /* Handle FORI/JFORI opcodes. */
@@ -1210,7 +1222,11 @@ TRef lj_record_idx(jit_State *J, RecordIndex *ix)
 
   /* Record the key lookup. */
   xref = rec_idx_key(J, ix);
+#ifdef _XBOX_ONE
+  xrefop = (IROp)(IR(tref_ref(xref))->o);
+#else
   xrefop = IR(tref_ref(xref))->o;
+#endif
   loadop = xrefop == IR_AREF ? IR_ALOAD : IR_HLOAD;
   /* The lj_meta_tset() inconsistency is gone, but better play safe. */
   oldv = xrefop == IR_KKPTR ? (cTValue *)ir_kptr(IR(tref_ref(xref))) : ix->oldv;
@@ -1870,7 +1886,11 @@ void lj_record_ins(jit_State *J)
     MMS mm = bcmode_mm(op);
     if (tref_isnumber_str(rb) && tref_isnumber_str(rc))
       rc = lj_opt_narrow_arith(J, rb, rc, rbv, rcv,
+#ifdef _XBOX_ONE
+                   (IROp)((int)mm - (int)MM_add + (int)IR_ADD));
+#else
 			       (int)mm - (int)MM_add + (int)IR_ADD);
+#endif
     else
       rc = rec_mm_arith(J, &ix, mm);
     break;

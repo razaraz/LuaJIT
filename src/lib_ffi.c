@@ -380,7 +380,11 @@ LJLIB_CF(ffi_clib___index)	LJLIB_REC(clib_index 1)
       CTypeID sid = ctype_cid(s->info);
       void *sp = *(void **)cdataptr(cd);
       CType *ct = ctype_raw(cts, sid);
+#ifdef _XBOX_ONE
+      if (lj_cconv_tv_ct(cts, ct, sid, L->top-1, (uint8_t *)sp))
+#else
       if (lj_cconv_tv_ct(cts, ct, sid, L->top-1, sp))
+#endif
 	lj_gc_check(L);
       return 1;
     }
@@ -405,7 +409,11 @@ LJLIB_CF(ffi_clib___newindex)	LJLIB_REC(clib_index 0)
 	if (ctype_attrib(d->info) == CTA_QUAL) qual |= d->size;
       }
       if (!((d->info|qual) & CTF_CONST)) {
+#ifdef _XBOX_ONE
+    lj_cconv_ct_tv(cts, d, *(uint8_t **)cdataptr(cd), o, 0);
+#else
 	lj_cconv_ct_tv(cts, d, *(void **)cdataptr(cd), o, 0);
+#endif
 	return 0;
       }
     }
@@ -509,7 +517,11 @@ LJLIB_CF(ffi_new)	LJLIB_REC(.)
   else
     cd = lj_cdata_newv(cts, id, sz, ctype_align(info));
   setcdataV(L, o-1, cd);  /* Anchor the uninitialized cdata. */
+#ifdef _XBOX_ONE
+  lj_cconv_ct_init(cts, ct, sz, (uint8_t*)cdataptr(cd),
+#else
   lj_cconv_ct_init(cts, ct, sz, cdataptr(cd),
+#endif
 		   o, (MSize)(L->top - o));  /* Initialize cdata. */
   if (ctype_isstruct(ct->info)) {
     /* Handle ctype __gc metamethod. Use the fast lookup here. */
@@ -540,7 +552,11 @@ LJLIB_CF(ffi_cast)	LJLIB_REC(ffi_new)
     lj_err_arg(L, 1, LJ_ERR_FFI_INVTYPE);
   if (!(tviscdata(o) && cdataV(o)->ctypeid == id)) {
     GCcdata *cd = lj_cdata_new(cts, id, d->size);
+#ifdef _XBOX_ONE
+    lj_cconv_ct_tv(cts, d, (uint8_t *)cdataptr(cd), o, CCF_CAST);
+#else
     lj_cconv_ct_tv(cts, d, cdataptr(cd), o, CCF_CAST);
+#endif
     setcdataV(L, o, cd);
     lj_gc_check(L);
   }

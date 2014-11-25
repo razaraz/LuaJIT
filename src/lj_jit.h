@@ -137,6 +137,24 @@ typedef enum {
   LJ_TRACE_ERR		/* Trace aborted with error. */
 } TraceState;
 
+#ifdef _XBOX_ONE
+/* Required for Xbox One since it compiles as C++ */
+TraceState operator&=(TraceState left, TraceState right)
+{
+    return (TraceState)(left & right);
+}
+
+TraceState operator&=(TraceState left, int right)
+{
+    return (TraceState)(left & right);
+}
+
+TraceState operator&=(int left, TraceState right)
+{
+    return (TraceState)(left & right);
+}
+#endif
+
 /* Post-processing action. */
 typedef enum {
   LJ_POST_NONE,		/* No action. */

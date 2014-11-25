@@ -10,6 +10,16 @@
 #include "lj_ir.h"
 #include "lj_jit.h"
 
+#ifdef _XBOX_ONE
+#include <cmath>
+
+inline float __CRTDECL XB1_Wrapper_sinh(float input)
+{
+    return sinh(input);
+}
+
+#endif
+
 /* C call info for CALL* instructions. */
 typedef struct CCallInfo {
   ASMFunction func;		/* Function pointer. */

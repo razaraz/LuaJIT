@@ -105,7 +105,11 @@ static IRType crec_ct2irt(CTState *cts, CType *ct)
     } else {
       uint32_t b = lj_fls(ct->size);
       if (b <= 3)
+#ifdef _XBOX_ONE
+    return (IRType)(IRT_I8 + 2*b + ((ct->info & CTF_UNSIGNED) ? 1 : 0));
+#else
 	return IRT_I8 + 2*b + ((ct->info & CTF_UNSIGNED) ? 1 : 0);
+#endif
     }
   } else if (ctype_isptr(ct->info)) {
     return (LJ_64 && ct->size == 8) ? IRT_P64 : IRT_P32;
@@ -182,7 +186,11 @@ static MSize crec_copy_unroll(CRecMemList *ml, CTSize len, CTSize step,
 {
   CTSize ofs = 0;
   MSize mlp = 0;
+#ifdef _XBOX_ONE
+  if (tp == IRT_CDATA) tp = (IRType)(IRT_U8 + 2*lj_fls(step));
+#else
   if (tp == IRT_CDATA) tp = IRT_U8 + 2*lj_fls(step);
+#endif
   do {
     while (ofs + step <= len) {
       if (mlp >= CREC_COPY_MAXUNROLL) return 0;
@@ -276,7 +284,11 @@ static MSize crec_fill_unroll(CRecMemList *ml, CTSize len, CTSize step)
 {
   CTSize ofs = 0;
   MSize mlp = 0;
+#ifdef _XBOX_ONE
+  IRType tp = (IRType)(IRT_U8 + 2*lj_fls(step));
+#else
   IRType tp = IRT_U8 + 2*lj_fls(step);
+#endif
   do {
     while (ofs + step <= len) {
       if (mlp >= CREC_COPY_MAXUNROLL) return 0;

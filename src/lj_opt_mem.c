@@ -699,7 +699,11 @@ static IRRef reassoc_xref(jit_State *J, IRIns *ir)
     idxref = ir2->op1;
     /* Try to CSE the reassociated chain. Give up if not found. */
     if (ir1 != ir &&
+#ifdef _XBOX_ONE
+    !(idxref = reassoc_trycse(J, (IROp)ir1->o, idxref,
+#else
 	!(idxref = reassoc_trycse(J, ir1->o, idxref,
+#endif
 				  ir1->o == IR_BSHL ? ir1->op2 : idxref)))
       return 0;
     if (!(idxref = reassoc_trycse(J, IR_ADD, idxref, ir->op2)))
@@ -742,7 +746,11 @@ retry:
       if (!irt_sametype(fins->t, IR(store->op2)->t)) {
 	IRType dt = irt_type(fins->t), st = irt_type(IR(store->op2)->t);
 	if (dt == IRT_I8 || dt == IRT_I16) {  /* Trunc + sign-extend. */
+#ifdef _XBOX_ONE
+      st = (IRType)(dt | IRCONV_SEXT);
+#else
 	  st = dt | IRCONV_SEXT;
+#endif
 	  dt = IRT_INT;
 	} else if (dt == IRT_U8 || dt == IRT_U16) {  /* Trunc + zero-extend. */
 	  st = dt;

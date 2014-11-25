@@ -564,7 +564,11 @@ LJFOLDF(kfold_add_kptr)
 #else
   ptrdiff_t ofs = fright->i;
 #endif
+#ifdef _XBOX_ONE
+  return lj_ir_kptr_(J, (IROp)fleft->o, (char *)p + ofs);
+#else
   return lj_ir_kptr_(J, fleft->o, (char *)p + ofs);
+#endif
 }
 
 LJFOLD(ADD any KGC)
@@ -1613,7 +1617,11 @@ LJFOLDF(reassoc_minmax_k)
     return RETRYFOLD;  /* (x o k1) o k2 ==> x o (k1 o k2) */
   } else if (irk->o == IR_KINT) {
     int32_t a = irk->i;
+#ifdef _XBOX_ONE
+    int32_t y = kfold_intop(a, fright->i, (IROp)fins->o);
+#else
     int32_t y = kfold_intop(a, fright->i, fins->o);
+#endif
     if (a == y)  /* (x o k1) o k2 ==> x o k1, if (k1 o k2) == k1. */
       return LEFTFOLD;
     PHIBARRIER(fleft);
@@ -2248,7 +2256,11 @@ TRef LJ_FASTCALL lj_opt_cse(jit_State *J)
 {
   /* Avoid narrow to wide store-to-load forwarding stall */
   IRRef2 op12 = (IRRef2)fins->op1 + ((IRRef2)fins->op2 << 16);
+#ifdef _XBOX_ONE
+  IROp op = (IROp)fins->o;
+#else
   IROp op = fins->o;
+#endif
   if (LJ_LIKELY(J->flags & JIT_F_OPT_CSE)) {
     /* Limited search for same operands in per-opcode chain. */
     IRRef ref = J->chain[op];
