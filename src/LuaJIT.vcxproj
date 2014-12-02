@@ -1,0 +1,185 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+
+  <PropertyGroup Label="Global">
+    <VCTargetsPath Condition="'$(VCTargetsPath11)' != '' and '$(VSVersion)' == '' and '$(VisualStudioVersion)' == ''">$(VCTargetsPath11)</VCTargetsPath>
+    <ProjectGuid>{C4263159-19A2-42AD-9C9D-5694B1ABC7F8}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+  </PropertyGroup>
+
+  <!-- Host Compiler -->
+  <PropertyGroup Condition="'$(HostCompilerPlatform)' == '' and '$(PROCESSOR_ARCHITECTURE)'=='AMD64'">
+    <HostCompilerPlatform>x64</HostCompilerPlatform>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(HostCompilerPlatform)' == '' and '$(PROCESSOR_ARCHITECTURE)'=='x86'">
+    <HostCompilerPlatform>x86</HostCompilerPlatform>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(HostCompilerConfiguration)'==''">
+    <HostCompilerConfiguration>Release</HostCompilerConfiguration>
+  </PropertyGroup>
+
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+
+  <PropertyGroup>
+    <HostDir>$(ProjectDir)host\</HostDir>
+  </PropertyGroup>
+
+  <PropertyGroup Label="Dasm">
+    <DasmDir>$(ProjectDir)..\dynasm\</DasmDir>
+    <Dasm>$(DasmDir)dynasm.lua</Dasm>
+    <DasmFlags>-D WIN -D JIT -D FFI -D P64</DasmFlags>
+    <DasmOutputs>$(HostDir)buildvm_arch.h</DasmOutputs>
+    <DasmVMDasc Condition="'$(PlatformTarget)' == 'x64' or '$(PlatformTarget)' == 'x86'">$(ProjectDir)vm_x86.dasc</DasmVMDasc>
+  </PropertyGroup>
+
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v110</PlatformToolset>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+
+  <ItemDefinitionGroup Label="HostCompiler">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <CompileAsManaged>false</CompileAsManaged>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_DEPRECATE</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+
+  <!-- MiniLua -->
+  <PropertyGroup Label="MiniLua Properties">
+    <MiniLuaProject>$(HostDir)MiniLua.vcxproj</MiniLuaProject>
+    <MiniLuaConfiguration>Platform=$(HostCompilerPlatform); Configuration=$(HostCompilerConfiguration)</MiniLuaConfiguration>
+  </PropertyGroup>
+
+  <ItemGroup Label="Depender Projects">
+    <ProjectReference Include="$(MiniLuaProject)">
+      <Name>MiniLua</Name>
+      <Project>{C4263159-19A2-42AD-9C9D-5694B1ABC7F8}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <SetPlatform>$(MiniLuaConfiguration)</SetPlatform>
+    </ProjectReference>
+  </ItemGroup>
+
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+
+  <!-- Overall structure of the project -->
+  <Target Name="MiniLua"
+          Inputs="@(MiniLuaSource)"
+          Outputs="$(MiniLuaExe)">
+
+    <PropertyGroup>
+      <TargetName>MiniLua</TargetName>
+      <LinkIncremental>false</LinkIncremental>
+      <Platform>$(HostCompilerPlatform)</Platform>
+      <Configuration>$(HostCompilerConfiguration)</Configuration>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ClCompile Include="@(MiniLuaSource)" />
+    </ItemGroup>
+
+    <Message Text="Compiling Minilua for $(Configuration)|$(Platform)" />
+
+    <MSBuild Projects="$(VCTargetsPath)\Microsoft.Cpp.targets" 
+             Targets="Build" />
+  </Target>
+
+  <ItemGroup Label="DasmLua">
+    <LuaRun Include="$(Dasm)">
+      <Args>-LN $(DasmFlags) -o $(DasmOutputs) $(DasmVMDasc)</Args>
+      <Outputs>$(DasmOutputs)</Outputs>
+    </LuaRun>
+    <Clean Include="$(DasmOutputs)" />
+  </ItemGroup>
+
+  <!-- Execute a lua file using MiniLua -->
+  <Target Name="LuaExecute"
+          Inputs="@(LuaRun)"
+          DependsOnTargets="ResolveProjectReferences"
+          Outputs="%(LuaRun.Outputs)">
+
+    <Message Text="Running lua File: %(LuaRun.FileName)" Importance="high"/>
+
+    <MSBuild Projects="$(MiniLuaProject)"
+             Targets="Run"
+             Properties="StartArguments=%(LuaRun.FullPath) %(LuaRun.Args); $(MiniLuaConfiguration)" />
+    <!--<Exec Command="$(MiniLuaExe) %(LuaRun.Identity) %(LuaRun.Args)"/>-->
+  </Target>
+
+  <Target Name="BuildDasmHeader"
+          DependsOnTargets="LuaExecute"
+          Inputs="$(Dasm)"
+          Outputs="$(DasmHeader)">
+  </Target>
+
+  <Target Name="BuildVMBuilder"
+          DependsOnTargets="BuildDasmHeader"
+          Outputs="$(VMBuilderExe)">
+  </Target>
+
+
+  <!-- Build VM -->
+
+  <ItemGroup Label="VMBase">
+    <BuildVMMode Include="peobj">
+      <OutputObj>lj_vm.obj</OutputObj>
+    </BuildVMMode>
+  </ItemGroup>
+
+  <!-- Set default inputs for all following BuildVMMode Items -->
+  <ItemDefinitionGroup>
+    <BuildVMMode>
+      <Inputs>$(LuaJITLibs)</Inputs>
+    </BuildVMMode>
+  </ItemDefinitionGroup>
+
+  <ItemGroup>
+    <BuildVMMode Include="bcdef">
+      <OutputObj>lj_bcdef.obj</OutputObj>
+    </BuildVMMode>
+    <BuildVMMode Include="ffdef">
+      <OutputObj>lj_ffdef.obj</OutputObj>
+    </BuildVMMode>
+    <BuildVMMode Include="ffdef">
+      <OutputObj>lj_ffdef.obj</OutputObj>
+    </BuildVMMode>
+    <BuildVMMode Include="ffdef">
+      <OutputObj>lj_ffdef.obj</OutputObj>
+    </BuildVMMode>
+    <BuildVMMode Include="ffdef">
+      <OutputObj>lj_ffdef.obj</OutputObj>
+    </BuildVMMode>
+    <BuildVMMode Include="folddef">
+      <OutputObj>lj_folddef.h</OutputObj>
+      <Inputs>lj_opt_fold.c</Inputs>
+    </BuildVMMode>
+  </ItemGroup>
+
+  <Target Name="BuildVM"
+          DependsOnTargets="BuildVMBuilder"
+          BeforeTargets="CoreBuild"
+          Inputs="@(BuildVMMode)"
+          Outputs="%(BuildVMMode.OutputObj)">
+    <Message Text="Building VM mode %(BuildVMMode.Identity)" />
+    <Exec Command="$(VMBuilderExe) -m %(BuildVMMode.Identity) -o %(BuildVMMode.OutputObj) %(BuildVMMode.Inputs)" />
+  </Target>
+</Project>
