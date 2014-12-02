@@ -1,0 +1,115 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+
+  <PropertyGroup Label="Globals">
+    <VCTargetsPath Condition="'$(VCTargetsPath11)' != '' and '$(VSVersion)' == '' and '$(VisualStudioVersion)' == ''">$(VCTargetsPath11)</VCTargetsPath>
+    <ProjectGuid>{65ECFC08-E1B3-4EBF-A2D2-D8F7FCF8A12F}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+  </PropertyGroup>
+
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v110</PlatformToolset>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+
+  <!--
+    ##########################################################################
+                                  MiniLua
+    ##########################################################################
+  -->
+  <PropertyGroup Label="MiniLua Properties">
+    <MiniLuaProject>$(HostDir)MiniLua.vcxproj</MiniLuaProject>
+    <MiniLuaConfiguration>Platform=$(Platform); Configuration=$(Configuration)</MiniLuaConfiguration>
+  </PropertyGroup>
+
+  <ItemGroup Label="Depender Projects">
+    <ProjectReference Include="$(MiniLuaProject)">
+      <Name>MiniLua</Name>
+      <Project>{C4263159-19A2-42AD-9C9D-5694B1ABC7F8}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <SetPlatform>$(MiniLuaConfiguration)</SetPlatform>
+    </ProjectReference>
+  </ItemGroup>
+
+  <!--
+    ##########################################################################
+                                  DASM
+    ##########################################################################
+  -->
+
+  <PropertyGroup Label="Dasm">
+    <DasmDir>$(ProjectDir)..\..\dynasm\</DasmDir>
+    <Dasm>$(DasmDir)dynasm.lua</Dasm>
+    <DasmFlags>-D WIN -D JIT -D FFI -D P64</DasmFlags>
+    <DasmOutputs>$(ProjectDir)buildvm_arch.h</DasmOutputs>
+    <DasmVMDasc Condition="'$(TargetVM)' == 'x64' or '$(TargetVM)' == 'x86'">$(ProjectDir)..\vm_x86.dasc</DasmVMDasc>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Dasm Include="$(DasmVMDasc)">
+      <Args>-LN $(DasmFlags)</Args>
+      <Outputs>$(DasmOutputs)</Outputs>
+    </Dasm>
+    <Clean Include="$(DasmOutputs)" />
+  </ItemGroup>
+
+  <!-- Generate the buildvm_arch header -->
+  <Target Name="GenerateBuildVMArchHeader"
+          Inputs="@(Dasm)"
+          DependsOnTargets="ResolveProjectReferences"
+          Outputs="%(Dasm.Outputs)">
+
+    <Message Text="Building %(Dasm.Identity) using Dasm" Importance="high"/>
+
+    <MSBuild Projects="$(MiniLuaProject)"
+             Targets="LuaExecute"
+             Properties="LuaSource=$(Dasm); LuaArguments=%(Dasm.Args) -o %(Dasm.Outputs) %(Dasm.Identity); $(MiniLuaConfiguration)" />
+  </Target>
+
+  <!--
+    ##########################################################################
+                                  BuildVM
+    ##########################################################################
+  -->
+
+  <PropertyGroup>
+    <TargetName>BuildVM</TargetName>
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+
+  <ItemDefinitionGroup>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <CompileAsManaged>false</CompileAsManaged>
+    </ClCompile>
+  </ItemDefinitionGroup>
+
+  <ItemGroup>
+    <ClCompile Include="buildvm*.c" />
+  </ItemGroup>
+
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+</Project>
