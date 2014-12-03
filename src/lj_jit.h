@@ -139,17 +139,17 @@ typedef enum {
 
 #ifdef _XBOX_ONE
 /* Required for Xbox One since it compiles as C++ */
-TraceState operator&=(TraceState left, TraceState right)
+inline TraceState operator&=(TraceState left, TraceState right)
 {
     return (TraceState)(left & right);
 }
 
-TraceState operator&=(TraceState left, int right)
+inline TraceState operator&=(TraceState left, int right)
 {
     return (TraceState)(left & right);
 }
 
-TraceState operator&=(int left, TraceState right)
+inline TraceState operator&=(int left, TraceState right)
 {
     return (TraceState)(left & right);
 }

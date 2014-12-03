@@ -150,7 +150,7 @@ IRDEF(IRENUM)
 
 #ifdef _XBOX_ONE
 /* Definition required for Xbox One since it compiles as C++ */
-IROp operator+=(IROp left, int right)
+inline IROp operator+=(IROp left, int right)
 {
     return (IROp)((int)left + right);
 }
@@ -323,7 +323,7 @@ IRTDEF(IRTENUM)
 
 #ifdef _XBOX_ONE
 /* Requires definition for Xbox One since it compiles as C++ */
-IRType operator-=(IRType left, int right)
+inline IRType operator-=(IRType left, int right)
 {
     return (IRType)((int)left - right);
 }

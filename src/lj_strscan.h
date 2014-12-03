@@ -24,7 +24,7 @@ typedef enum {
 
 #ifdef _XBOX_ONE
 /* Defined for Xbox One since it compiles as C++ */
-StrScanFmt operator+=(StrScanFmt left, int right)
+inline StrScanFmt operator+=(StrScanFmt left, int right)
 {
     return (StrScanFmt)((int)left + right);
 }
