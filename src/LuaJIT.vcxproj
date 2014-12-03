@@ -1,28 +1,63 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-
   <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Release|x64">
       <Configuration>Release</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|Durango">
+      <Configuration>Debug</Configuration>
+      <Platform>Durango</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Durango">
+      <Configuration>Release</Configuration>
+      <Platform>Durango</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|Xbox 360">
+      <Configuration>Debug</Configuration>
+      <Platform>Xbox 360</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Xbox 360">
+      <Configuration>Release</Configuration>
+      <Platform>Xbox 360</Platform>
+    </ProjectConfiguration>
   </ItemGroup>
 
+  <Import Project="TargetPlatforms.props"/>
+
   <PropertyGroup Label="Global">
+    <RootNamespace>LuaJIT</RootNamespace>
     <VCTargetsPath Condition="'$(VCTargetsPath11)' != '' and '$(VSVersion)' == '' and '$(VisualStudioVersion)' == ''">$(VCTargetsPath11)</VCTargetsPath>
     <ProjectGuid>{C4263159-19A2-42AD-9C9D-5694B1ABC7F8}</ProjectGuid>
+    <DefaultLanguage>en-US</DefaultLanguage>
     <Keyword>Win32Proj</Keyword>
+    <Keyword Condition="'$(Platform)' == 'Xbox 360'">Xbox360Proj</Keyword>
+    <TargetRuntime>Native</TargetRuntime>
+  </PropertyGroup>
+
+  <!-- Global properties exclusive to Xbox One -->
+  <PropertyGroup Label="Global" Condition="'$(Platform)' == 'Durango'">
+    <ApplicationEnvironment>title</ApplicationEnvironment>
+    <MinimumVisualStudioVersion>11.0</MinimumVisualStudioVersion>
   </PropertyGroup>
 
   <!-- Host Compiler -->
-  <PropertyGroup Condition="'$(HostCompilerPlatform)' == '' and '$(PROCESSOR_ARCHITECTURE)'=='AMD64'">
-    <HostCompilerPlatform>x64</HostCompilerPlatform>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(HostCompilerPlatform)' == '' and '$(PROCESSOR_ARCHITECTURE)'=='x86'">
-    <HostCompilerPlatform>x86</HostCompilerPlatform>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(HostCompilerConfiguration)'==''">
-    <HostCompilerConfiguration>Release</HostCompilerConfiguration>
+  <PropertyGroup>
+    <HostCompilerPlatform Condition="'$(HostCompilerPlatform)' == '' and '$(PROCESSOR_ARCHITECTURE)'=='AMD64'">x64</HostCompilerPlatform>
+    <HostCompilerPlatform Condition="'$(HostCompilerPlatform)' == '' and '$(PROCESSOR_ARCHITECTURE)'=='x86'">x86</HostCompilerPlatform>
+    <HostCompilerConfiguration Condition="'$(HostCompilerConfiguration)'==''">Release</HostCompilerConfiguration>
   </PropertyGroup>
 
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -31,113 +66,172 @@
     <HostDir>$(ProjectDir)host\</HostDir>
   </PropertyGroup>
 
-  <PropertyGroup Label="Dasm">
-    <DasmDir>$(ProjectDir)..\dynasm\</DasmDir>
-    <Dasm>$(DasmDir)dynasm.lua</Dasm>
-    <DasmFlags>-D WIN -D JIT -D FFI -D P64</DasmFlags>
-    <DasmOutputs>$(HostDir)buildvm_arch.h</DasmOutputs>
-    <DasmVMDasc Condition="'$(PlatformTarget)' == 'x64' or '$(PlatformTarget)' == 'x86'">$(ProjectDir)vm_x86.dasc</DasmVMDasc>
+  <!--
+    ##########################################################################
+                              LuaJIT Configuration
+    ##########################################################################
+  -->
+
+  <!-- Generic configuration -->
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>$(TargetLibraryType)</ConfigurationType>
+    <PlatformToolset>v110</PlatformToolset>
   </PropertyGroup>
 
-  <PropertyGroup Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v110</PlatformToolset>
-    <UseDebugLibraries>false</UseDebugLibraries>
+  <!-- Configuration depending on Build type -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
     <WholeProgramOptimization>true</WholeProgramOptimization>
+    <UseDebugLibraries>false</UseDebugLibraries>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+    <WholeProgramOptimization>false</WholeProgramOptimization>
+    <UseDebugLibraries>True</UseDebugLibraries>
+  </PropertyGroup>
+
+  <!-- Configuration depending on Platform -->
+  <PropertyGroup Condition="'$(Platform)' == 'Xbox 360'">
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+
 
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform"/>
 
-  <ItemDefinitionGroup Label="HostCompiler">
+  <!-- Generic Compile/Link options -->
+  <ItemDefinitionGroup>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
-      <Optimization>MaxSpeed</Optimization>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
-      <CompileAsManaged>false</CompileAsManaged>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_DEPRECATE</PreprocessorDefinitions>
+      <ExceptionHandling>false</ExceptionHandling>
+      <StringPooling>true</StringPooling>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <OpenMPSupport>false</OpenMPSupport>
+      <PreprocessorDefinitions>__WRL_NO_DEFAULT_LIB__;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="$(TargetDisableFFI)">LUAJIT_DISABLE_FFI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+
+      <!-- The code makes assumptions that this is never defined, and re-defines it. Don't warn about redefinition. -->
+      <UndefinePreprocessorDefinitions>WIN32_LEAN_AND_MEAN</UndefinePreprocessorDefinitions>
     </ClCompile>
+  </ItemDefinitionGroup>
+
+  <ItemDefinitionGroup Condition="'$(TargetLibraryType)' == 'DynamicLibrary'">
+    <ClCompile>
+      <PreprocessorDefinitions>LUA_BUILD_AS_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+
+  <!-- Compiling/Linking options depending on project type -->
+  <ItemDefinitionGroup Condition="'$(Configuration)' == 'Debug'">
     <Link>
-      <SubSystem>Console</SubSystem>
-      <GenerateDebugInformation>false</GenerateDebugInformation>
+    </Link>
+    <ClCompile>
+      <BufferSecurityCheck>true</BufferSecurityCheck>
+      <MinimalRebuild>true</MinimalRebuild>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary Condition="'$(TargetLibraryType)' == 'DynamicLibrary'">MultiThreadedDebugDLL</RuntimeLibrary>
+      <RuntimeLibrary Condition="'$(TargetLibraryType)' == 'StaticLibrary'">MultiThreadedDebug</RuntimeLibrary>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)' == 'Release'">
+    <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
+    <ClCompile>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <MinimalRebuild>false</MinimalRebuild>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <Optimization>Full</Optimization>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary Condition="'$(TargetLibraryType)' == 'DynamicLibrary'">MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeLibrary Condition="'$(TargetLibraryType)' == 'StaticLibrary'">MultiThreaded</RuntimeLibrary>
+    </ClCompile>
   </ItemDefinitionGroup>
 
-  <!-- MiniLua -->
-  <PropertyGroup Label="MiniLua Properties">
-    <MiniLuaProject>$(HostDir)MiniLua.vcxproj</MiniLuaProject>
-    <MiniLuaConfiguration>Platform=$(HostCompilerPlatform); Configuration=$(HostCompilerConfiguration)</MiniLuaConfiguration>
+  <!-- Compiling options depending on target Platform -->
+  <PropertyGroup Condition="'$(Platform)' == 'Durango'">
+    <ReferencePath>$(Console_SdkLibPath)</ReferencePath>
+    <LibraryPath>$(Console_SdkLibPath)</LibraryPath>
+    <LibraryWPath>$(Console_SdkLibPath)</LibraryWPath>
+    <IncludePath>$(Console_SdkIncludeRoot)</IncludePath>
+    <ExecutablePath>$(Console_SdkRoot)bin;$(VCInstallDir)bin\x86_amd64;$(VCInstallDir)bin;$(WindowsSDK_ExecutablePath_x86);$(VSInstallDir)Common7\Tools\bin;$(VSInstallDir)Common7\tools;$(VSInstallDir)Common7\ide;$(ProgramFiles)\HTML Help Workshop;$(MSBuildToolsPath32);$(FxCopDir);$(PATH);</ExecutablePath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Platform)' == 'Durango'">
+    <Link>
+      <AdditionalDependencies>combase.lib;kernelx.lib;uuid.lib;</AdditionalDependencies>
+      <SubSystem>Windows</SubSystem>
+      <GenerateWindowsMetadata>false</GenerateWindowsMetadata>
+    </Link>
+    <ClCompile>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <CompileAsWinRT>false</CompileAsWinRT>
+      <ForcedUsingFiles></ForcedUsingFiles>
+      <PreprocessorDefinitions>_TITLE;_XBOX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <EnableEnhancedInstructionSet>AdvancedVectorExtensions</EnableEnhancedInstructionSet>
+      <FloatingPointModel>Fast</FloatingPointModel>
+      <AdditionalOptions>/favor:AMD64 %(AdditionalOptions)</AdditionalOptions>
+      <DisableSpecificWarnings>4162;4530;4010;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Platform)' == 'Xbox 360'">
+    <Link>
+    </Link>
+    <ClCompile>
+      <PreprocessorDefinitions>LUAJIT_USE_SYSMALLOC;_XBOX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ExceptionHandling>false</ExceptionHandling>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+    </ClCompile>
+  </ItemDefinitionGroup>
+
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <!--
+    ##########################################################################
+                              LuaJIT Sources
+    ##########################################################################
+  -->
+
+  <ItemGroup>
+    <ClCompile Include="lj_*.c" />
+    <ClCompile Include="lib_*.c" />
+    <ClInclude Include="*.h" Exclude="luajit.h" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <LuaJITLibs>lib_base.c lib_math.c lib_bit.c lib_string.c lib_table.c lib_io.c lib_os.c lib_package.c lib_debug.c lib_jit.c lib_ffi.c</LuaJITLibs>
+  </PropertyGroup>
+
+  <!--
+    ##########################################################################
+                                  BuildVM
+    ##########################################################################
+  -->
+  <PropertyGroup Label="BuildVM Properties">
+    <BuildVMProject>$(HostDir)BuildVM.vcxproj</BuildVMProject>
+    <BuildVMConfiguration>Platform=$(HostCompilerPlatform); Configuration=$(HostCompilerConfiguration); TargetVMArch=$(TargetVMArch)</BuildVMConfiguration>
   </PropertyGroup>
 
   <ItemGroup Label="Depender Projects">
-    <ProjectReference Include="$(MiniLuaProject)">
-      <Name>MiniLua</Name>
-      <Project>{C4263159-19A2-42AD-9C9D-5694B1ABC7F8}</Project>
+    <ProjectReference Include="$(BuildVMProject)">
+      <Name>BuildVM</Name>
+      <Project>{65ECFC08-E1B3-4EBF-A2D2-D8F7FCF8A12F}</Project>
+      <BuildReference>true</BuildReference>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-      <SetPlatform>$(MiniLuaConfiguration)</SetPlatform>
+      <SetPlatform>$(BuildVMConfiguration)</SetPlatform>
     </ProjectReference>
   </ItemGroup>
 
-  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-
-  <!-- Overall structure of the project -->
-  <Target Name="MiniLua"
-          Inputs="@(MiniLuaSource)"
-          Outputs="$(MiniLuaExe)">
-
-    <PropertyGroup>
-      <TargetName>MiniLua</TargetName>
-      <LinkIncremental>false</LinkIncremental>
-      <Platform>$(HostCompilerPlatform)</Platform>
-      <Configuration>$(HostCompilerConfiguration)</Configuration>
-    </PropertyGroup>
-
-    <ItemGroup>
-      <ClCompile Include="@(MiniLuaSource)" />
-    </ItemGroup>
-
-    <Message Text="Compiling Minilua for $(Configuration)|$(Platform)" />
-
-    <MSBuild Projects="$(VCTargetsPath)\Microsoft.Cpp.targets" 
-             Targets="Build" />
+  <Target Name="GetVMBuilderExe"
+          DependsOnTargets="ResolveProjectReferences">
+    <MSBuild Projects="$(BuildVMProject)"
+             Targets="GetNativeTargetPath"
+             Properties="$(BuildVMConfiguration)">
+      <Output TaskParameter="TargetOutputs" PropertyName="BuildVMExe" />
+    </MSBuild>
+    <Error Condition="'$(BuildVMExe)' == ''" Text="Could not get BuildVM Executable, perhaps it didn't build correctly"/>
   </Target>
-
-  <ItemGroup Label="DasmLua">
-    <LuaRun Include="$(Dasm)">
-      <Args>-LN $(DasmFlags) -o $(DasmOutputs) $(DasmVMDasc)</Args>
-      <Outputs>$(DasmOutputs)</Outputs>
-    </LuaRun>
-    <Clean Include="$(DasmOutputs)" />
-  </ItemGroup>
-
-  <!-- Execute a lua file using MiniLua -->
-  <Target Name="LuaExecute"
-          Inputs="@(LuaRun)"
-          DependsOnTargets="ResolveProjectReferences"
-          Outputs="%(LuaRun.Outputs)">
-
-    <Message Text="Running lua File: %(LuaRun.FileName)" Importance="high"/>
-
-    <MSBuild Projects="$(MiniLuaProject)"
-             Targets="Run"
-             Properties="StartArguments=%(LuaRun.FullPath) %(LuaRun.Args); $(MiniLuaConfiguration)" />
-    <!--<Exec Command="$(MiniLuaExe) %(LuaRun.Identity) %(LuaRun.Args)"/>-->
-  </Target>
-
-  <Target Name="BuildDasmHeader"
-          DependsOnTargets="LuaExecute"
-          Inputs="$(Dasm)"
-          Outputs="$(DasmHeader)">
-  </Target>
-
-  <Target Name="BuildVMBuilder"
-          DependsOnTargets="BuildDasmHeader"
-          Outputs="$(VMBuilderExe)">
-  </Target>
-
-
-  <!-- Build VM -->
 
   <ItemGroup Label="VMBase">
     <BuildVMMode Include="peobj">
@@ -154,19 +248,19 @@
 
   <ItemGroup>
     <BuildVMMode Include="bcdef">
-      <OutputObj>lj_bcdef.obj</OutputObj>
+      <OutputObj>lj_bcdef.h</OutputObj>
     </BuildVMMode>
     <BuildVMMode Include="ffdef">
-      <OutputObj>lj_ffdef.obj</OutputObj>
+      <OutputObj>lj_ffdef.h</OutputObj>
     </BuildVMMode>
-    <BuildVMMode Include="ffdef">
-      <OutputObj>lj_ffdef.obj</OutputObj>
+    <BuildVMMode Include="libdef">
+      <OutputObj>lj_libdef.h</OutputObj>
     </BuildVMMode>
-    <BuildVMMode Include="ffdef">
-      <OutputObj>lj_ffdef.obj</OutputObj>
+    <BuildVMMode Include="recdef">
+      <OutputObj>lj_recdef.h</OutputObj>
     </BuildVMMode>
-    <BuildVMMode Include="ffdef">
-      <OutputObj>lj_ffdef.obj</OutputObj>
+    <BuildVMMode Include="vmdef">
+      <OutputObj>jit\vmdef.lua</OutputObj>
     </BuildVMMode>
     <BuildVMMode Include="folddef">
       <OutputObj>lj_folddef.h</OutputObj>
@@ -175,11 +269,26 @@
   </ItemGroup>
 
   <Target Name="BuildVM"
-          DependsOnTargets="BuildVMBuilder"
-          BeforeTargets="CoreBuild"
+          DependsOnTargets="GetVMBuilderExe"
+          BeforeTargets="ClCompile"
           Inputs="@(BuildVMMode)"
           Outputs="%(BuildVMMode.OutputObj)">
-    <Message Text="Building VM mode %(BuildVMMode.Identity)" />
-    <Exec Command="$(VMBuilderExe) -m %(BuildVMMode.Identity) -o %(BuildVMMode.OutputObj) %(BuildVMMode.Inputs)" />
+    <Message Text="Building VM mode %(BuildVMMode.Identity)" Importance="high"/>
+    <Exec Command="$(BuildVMExe) -m %(BuildVMMode.Identity) -o %(BuildVMMode.OutputObj) %(BuildVMMode.Inputs)" />
+
+    <CreateItem Include="%(BuildVMMode.OutputObj)">
+      <Output TaskParameter="Include" ItemName="BuildVMOutput"/>
+    </CreateItem>
   </Target>
+
+  <Target Name="ProcessBuildVMOutputs"
+          DependsOnTargets="BuildVM"
+          AfterTargets="BuildVM">
+    <CreateItem Include="@(BuildVMOutput)">
+      <Output TaskParameter="Include" ItemName="Clean"/>
+      <Output TaskParameter="Include" ItemName="Link" Condition="'%(BuildVMOutput.Extension)' == '.obj'"/>
+      <Output TaskParameter="Include" ItemName="Include" Condition="'%(BuildVMOutput.Extension)' == '.h'"/>
+    </CreateItem>
+  </Target>
+
 </Project>

@@ -6,6 +6,10 @@
       <Configuration>Release</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
   </ItemGroup>
 
   <PropertyGroup Label="Globals">
@@ -25,6 +29,7 @@
   </PropertyGroup>
 
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 
   <!--
     ##########################################################################
@@ -32,7 +37,7 @@
     ##########################################################################
   -->
   <PropertyGroup Label="MiniLua Properties">
-    <MiniLuaProject>$(HostDir)MiniLua.vcxproj</MiniLuaProject>
+    <MiniLuaProject>$(ProjectDir)MiniLua.vcxproj</MiniLuaProject>
     <MiniLuaConfiguration>Platform=$(Platform); Configuration=$(Configuration)</MiniLuaConfiguration>
   </PropertyGroup>
 
@@ -40,10 +45,22 @@
     <ProjectReference Include="$(MiniLuaProject)">
       <Name>MiniLua</Name>
       <Project>{C4263159-19A2-42AD-9C9D-5694B1ABC7F8}</Project>
+      <BuildReference>true</BuildReference>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       <SetPlatform>$(MiniLuaConfiguration)</SetPlatform>
     </ProjectReference>
   </ItemGroup>
+
+  <Target Name="GetMiniLuaExe"
+          DependsOnTargets="ResolveProjectReferences">
+
+    <MSBuild Projects="$(MiniLuaProject)"
+             Targets="GetNativeTargetPath"
+             Properties="$(MiniLuaConfiguration)">
+      <Output TaskParameter="TargetOutputs" PropertyName="MiniLuaExe"/>
+    </MSBuild>
+    <Error Condition="'$(MiniLuaExe)' == ''" Text="Could not get MiniLua Executable, perhaps it didn't build correctly"/>
+  </Target>
 
   <!--
     ##########################################################################
@@ -56,7 +73,8 @@
     <Dasm>$(DasmDir)dynasm.lua</Dasm>
     <DasmFlags>-D WIN -D JIT -D FFI -D P64</DasmFlags>
     <DasmOutputs>$(ProjectDir)buildvm_arch.h</DasmOutputs>
-    <DasmVMDasc Condition="'$(TargetVM)' == 'x64' or '$(TargetVM)' == 'x86'">$(ProjectDir)..\vm_x86.dasc</DasmVMDasc>
+    <DasmVMDasc Condition="'$(TargetVMArch)' == 'x64' or '$(TargetVMArch)' == 'x86'">$(ProjectDir)..\vm_x86.dasc</DasmVMDasc>
+    <DasmVMDasc Condition="'$(TargetVMArch)' == 'PPC'">$(ProjectDir)..\vm_ppc.dasc</DasmVMDasc>
   </PropertyGroup>
 
   <ItemGroup>
@@ -67,17 +85,16 @@
     <Clean Include="$(DasmOutputs)" />
   </ItemGroup>
 
-  <!-- Generate the buildvm_arch header -->
+  <!-- Generate the buildvm_arch header using DASM through the minilua executable -->
   <Target Name="GenerateBuildVMArchHeader"
           Inputs="@(Dasm)"
-          DependsOnTargets="ResolveProjectReferences"
+          DependsOnTargets="GetMiniLuaExe"
+          BeforeTargets="ClCompile"
           Outputs="%(Dasm.Outputs)">
 
     <Message Text="Building %(Dasm.Identity) using Dasm" Importance="high"/>
 
-    <MSBuild Projects="$(MiniLuaProject)"
-             Targets="LuaExecute"
-             Properties="LuaSource=$(Dasm); LuaArguments=%(Dasm.Args) -o %(Dasm.Outputs) %(Dasm.Identity); $(MiniLuaConfiguration)" />
+    <Exec Command="$(MiniLuaExe) $(Dasm) %(Dasm.Args) -o %(Dasm.Outputs) %(Dasm.FullPath)" />
   </Target>
 
   <!--
@@ -99,10 +116,13 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <ClCompile>
+      <AdditionalIncludeDirectories>$(ProjectDir)..;$(DasmDir)</AdditionalIncludeDirectories>
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>LUAJIT_TARGET=LUAJIT_ARCH_$(TargetVMArch);NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(TargetDisableJIT)' == 'true'">LUAJIT_DISABLE_JIT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(TargetDisableFFI)' == 'true'">LUAJIT_DISABLE_FFI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <CompileAsManaged>false</CompileAsManaged>
     </ClCompile>
   </ItemDefinitionGroup>
@@ -111,5 +131,4 @@
     <ClCompile Include="buildvm*.c" />
   </ItemGroup>
 
-  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

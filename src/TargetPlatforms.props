@@ -1,0 +1,54 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!--
+    ##########################################################################
+                   Build Configuration for Microsoft platforms
+    These are the configuration variables that control the most likely changes
+    in configuration for MSBuild-based builds.
+
+    TargetVMArch: The target architecture for which we are building the VM.
+                  equivalent to the TARGET_LJARCH Make variable
+    TargetLibraryType: The type of library to create.
+                  Possible values: StaticLibrary, DynamicLibrary
+    TargetDASMFlags: The flags to pass in to dynasm
+
+    The platform values currently supported by this build file are:
+        x64: Windows 64-bit
+        Win32: Windows32-bit
+        Xbox 360: Xbox 360 (Must have Xbox360 XDK installed)
+        Durango: Xbox One (Must have Xbox One XDK installed)
+    ##########################################################################
+  -->
+
+  <PropertyGroup Condition="'$(Platform)' == 'x64'">
+    <TargetVMArch>x64</TargetVMArch>
+    <TargetLibraryType>DynamicLibrary</TargetLibraryType>
+    <TargetDASMFlags>-D WIN -D JIT -D FFI -D P64</TargetDASMFlags>
+    <TargetDisableJIT>false</TargetDisableJIT>
+    <TargetDisableFFI>false</TargetDisableFFI>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Platform)' == 'Win32'">
+    <TargetVMArch>x86</TargetVMArch>
+    <TargetLibraryType>DynamicLibrary</TargetLibraryType>
+    <TargetDASMFlags>-D WIN -D JIT -D FFI</TargetDASMFlags>
+    <TargetDisableJIT>false</TargetDisableJIT>
+    <TargetDisableFFI>false</TargetDisableFFI>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Platform)' == 'Xbox 360'">
+    <TargetVMArch>PPC</TargetVMArch>
+    <TargetLibraryType>StaticLibrary</TargetLibraryType>
+    <TargetDASMFlags>-D GPR64 -D FRAME32 -D PPE -D SQRT -D DUALNUM</TargetDASMFlags>
+    <TargetDisableJIT>true</TargetDisableJIT>
+    <TargetDisableFFI>true</TargetDisableFFI>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Platform)' == 'Durango'">
+    <TargetVMArch>x64</TargetVMArch>
+    <TargetLibraryType>DynamicLibrary</TargetLibraryType>
+    <TargetDASMFlags>-D WIN -D JIT -D FFI -D P64</TargetDASMFlags>
+    <TargetDisableJIT>false</TargetDisableJIT>
+    <TargetDisableFFI>false</TargetDisableFFI>
+  </PropertyGroup>
+</Project>

@@ -51,20 +51,5 @@
     <ClCompile Include="minilua.c" />
   </ItemGroup>
 
-    <PropertyGroup Condition="'$(LuaSource)' != ''">
-      <StartArguments>$(LuaSource) $(LuaArguments)</StartArguments>
-    </PropertyGroup>
-
-  <Target Name="LuaExecute"
-          DependsOnTargets="Build">
-
-    <Error Condition="'$(LuaSource)' == ''" Text="Must specify a LuaSource to execute via LuaExecute"/>
-    <Message Text="Running lua File: $(LuaSource)" Importance="high"/>
-    <Message Text="With args: $(LuaArguments)" Importance="high"/>
-
-    <CallTarget Targets="Run"
-                RunEachTargetSeparately="true"/>
-  </Target>
-
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>
