@@ -367,7 +367,9 @@ LJ_FUNCA int lj_err_unwind_arm(int state, void *ucb, _Unwind_Context *ctx)
 ** _set_se_translator doesn't really help, because it requires /EHa, too.
 */
 
+#ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
+#endif
 #include <windows.h>
 
 /* Taken from: http://www.nynaeve.net/?p=99 */

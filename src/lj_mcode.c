@@ -57,7 +57,9 @@ void lj_mcode_sync(void *start, void *end)
 
 #if LJ_TARGET_WINDOWS
 
+#ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
+#endif
 #include <windows.h>
 
 #define MCPROT_RW	PAGE_READWRITE
